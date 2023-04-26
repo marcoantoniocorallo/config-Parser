@@ -17,6 +17,7 @@ An example of a valid configuration file is the following.
 #import<another_external.config>
 sect1{
     var1 = "hi!";
+    // this is a comment!
     var2 = true;
     var3 = 42;
 }
@@ -29,3 +30,6 @@ In case of **duplicate identifiers** (sections or variables of the same section)
 The data structure built is a map `[section, [var, value] ]`; the implementation defined in the module DataStructure provides also a method for removing a section and one for removing a single binding.
 
 It also provides a *pretty-printer* that prints the structure in the format of configuration files, so it can be used for *serializing* the structure.
+
+---
+###### Note: the import directive has been treated in the lexer for simplicity, in the parser it caused circular-dependencies errors.
