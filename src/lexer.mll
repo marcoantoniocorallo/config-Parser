@@ -17,7 +17,7 @@ let string  = "\"" [^ '"']* "\""
 let id 			= ['a'-'z' 'A'-'Z']['a'-'z' '0'-'9']*
 let white   = [' ' '\t']
 
-rule tokenize file = parse
+rule tokenize opened_file = parse
 	| integer as inum		{ INT(int_of_string inum)}
 	| bool as b					{ BOOL (bool_of_string b) }
 	| string as s				{ STRING (String.sub s 1 ((String.length s)-2)) }
@@ -30,15 +30,17 @@ rule tokenize file = parse
   | '$'               { VAR }
   | "#import<" ( [^ '\n' '>']* as filename) '>'
                       { 
-                        let lb = Lexing.from_channel (open_in filename) in
-                        let p = Parser.main (tokenize filename) lb in
-                        IMPORT p
+                        if (List.mem filename opened_file) then failwith("Circular dependency detected: "^filename)
+                        else 
+                          let lb = Lexing.from_channel (open_in filename) in
+                          let p = Parser.main (tokenize (filename::opened_file)) lb in
+                          IMPORT p
                       }
-  | '\n'              { Lexing.new_line lexbuf; tokenize file lexbuf }
+  | '\n'              { Lexing.new_line lexbuf; (tokenize opened_file) lexbuf }
   | "//" [^ '\n']*    (* eat up one-line comments *)
   | white             (* eat up whitespace *)
-											{ tokenize file lexbuf }
+											{ tokenize opened_file lexbuf }
   | eof               { EOF }
 	| _ 			          { raise (Lexing_Error("Unexpected character "^(Lexing.lexeme lexbuf)^
-                        " at "^file^": "^(string_of_position (Lexing.lexeme_start_p lexbuf)))) 
+                        " at "^(List.hd opened_file)^": "^(string_of_position (Lexing.lexeme_start_p lexbuf)))) 
                       }

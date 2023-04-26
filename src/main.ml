@@ -6,7 +6,7 @@ let () =
   let filename = Sys.argv.(argvLength-1) in 
   let lexbuf = Lexing.from_channel (open_in filename) in 
   try
-    let ds = Parser.main (Lexer.tokenize filename) lexbuf in 
+    let ds = Parser.main (Lexer.tokenize [filename]) lexbuf in 
     print_ds ds
   with
     |Lexing_Error(s) -> Printf.fprintf stderr "%s\n" s
